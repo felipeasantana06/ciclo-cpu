@@ -1,0 +1,7 @@
+LOAD #10
+ADD #5
+MUL #2
+STORE M25
+HLT
+
+M25: 0

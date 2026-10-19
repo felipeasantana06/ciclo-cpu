@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11151c">
+  <title>Ciclo CPU</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="engine.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Ciclo CPU, início"><span class="brand-chip" aria-hidden="true">C<span>↳</span></span><strong>CICLO<span>CPU</span></strong><span class="brand-divider"></span><span class="brand-sub">LABORATÓRIO INTERATIVO</span></a>
+    <nav><span class="local-badge"><i></i> 100% local</span><button id="guide-button" class="button quiet">? <span>Guia de instruções</span></button><button id="presentation" class="button quiet" title="Ampliar o diagrama para a aula">⛶ <span>Modo aula</span></button></nav>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">ARQUITETURA DE COMPUTADORES / PROF. RAFAEL</p><h1>Por dentro de uma instrução<span>.</span></h1><p class="subtitle">Do primeiro endereço ao resultado na memória. Acompanhe cada transferência.</p></div>
+      <div class="machine-spec"><span>MODELO DIDÁTICO</span><strong>64 posições <b>·</b> 32 bits</strong><small>Uma instrução por posição de memória</small></div>
+    </section>
+    <section class="transport" aria-label="Controles da simulação">
+      <div class="transport-actions"><button id="play" class="button primary"><span class="play-icon">▶</span><span id="play-label">Executar</span></button><button id="step" class="button"><span>↦</span> Próximo passo</button><button id="back" class="button icon-only" title="Voltar uma micro-operação (←)" aria-label="Voltar uma micro-operação">↶</button><span class="toolbar-divider"></span><button id="reset" class="button quiet"><span>⟲</span> Reiniciar</button></div>
+      <div class="transport-options"><label for="speed">Ritmo</label><select id="speed"><option value="1800">Lento · 0,5×</option><option value="950" selected>Normal · 1×</option><option value="400">Rápido · 2×</option><option value="120">Turbo · 8×</option></select><span id="status" class="status"><i></i> Pronto para iniciar</span></div>
+    </section>
+    <ol class="phases" aria-label="As seis etapas do ciclo de instrução">
+      <li data-phase="1"><span class="phase-number">01</span><div><strong>Buscar</strong><small>Ler a instrução na MP</small></div></li>
+      <li data-phase="2"><span class="phase-number">02</span><div><strong>Atualizar CI</strong><small>Próxima instrução</small></div></li>
+      <li data-phase="3"><span class="phase-number">03</span><div><strong>Decodificar</strong><small>Identificar a operação</small></div></li>
+      <li data-phase="4"><span class="phase-number">04</span><div><strong>Buscar operandos</strong><small>Preparar as entradas</small></div></li>
+      <li data-phase="5"><span class="phase-number">05</span><div><strong>Executar</strong><small>Operar ou controlar</small></div></li>
+      <li data-phase="6"><span class="phase-number">06</span><div><strong>Armazenar</strong><small>Gravar, se necessário</small></div></li>
+    </ol>
+    <div id="alert" class="alert" role="alert" hidden></div>
+    <div class="workspace">
+      <aside class="panel program-panel">
+        <div class="panel-heading"><h2><span class="section-icon">⌘</span> Programa</h2><span class="tiny-label">ASSEMBLY DIDÁTICO</span></div>
+        <div class="example-control"><label for="example">Carregar exemplo</label><select id="example"><option value="add">01 · Soma entre memórias</option><option value="arithmetic">02 · Expressão aritmética</option><option value="loop">03 · Laço com comparação</option><option value="logic">04 · Operações lógicas</option><option value="immediate">05 · Valores imediatos</option></select></div>
+        <div class="editor-header"><span><i class="file-dot"></i> programa.asm</span><span id="editor-state">carregado</span></div>
+        <div class="editor-wrap"><div id="line-numbers" class="line-numbers" aria-hidden="true"></div><textarea id="source" spellcheck="false" aria-label="Código assembly do programa" autocapitalize="off" autocomplete="off"></textarea></div>
+        <div class="editor-footer"><span id="program-count">2 instruções</span><span> ; comentário</span></div>
+        <div class="program-buttons"><button id="assemble" class="button assemble-button">↓ Montar programa</button><button id="export" class="button icon-only" title="Baixar o código .asm" aria-label="Baixar programa assembly">⇩</button><button id="import" class="button icon-only" title="Abrir um arquivo .asm" aria-label="Abrir programa assembly">↥</button><input id="import-file" type="file" accept=".asm,.txt" hidden></div>
+        <div class="convention"><span class="eyebrow">COMO LER</span><code>ADD <b>M13</b> <b>M15</b> <em>M21</em></code><div class="syntax-labels"><span>origem 1</span><span>origem 2</span><span>destino</span></div><p>MP[21] ← MP[13] + MP[15]</p></div>
+        <div class="lesson-note"><span>✦</span><p id="example-note">Siga o caminho de <strong>7 + 5</strong> e observe o resultado <strong>12</strong> chegar a M21.</p></div>
+      </aside>
+      <section class="panel cpu-panel" aria-label="Diagrama interativo do processador">
+        <div class="panel-heading"><h2><span class="section-icon">▦</span> Caminho dos dados</h2><div class="legend"><span><i class="dot-data"></i> dados</span><span><i class="dot-control"></i> controle</span><span><i class="dot-address"></i> endereço</span></div></div>
+        <div class="instruction-bar"><span>INSTRUÇÃO EM RI</span><code id="current-instruction">Aguardando busca</code><span id="instruction-address">CI → M00</span></div>
+        <div class="diagram-viewport"><div id="diagram" class="diagram">
+          <div class="cpu-boundary"><span>CPU <b>/</b> UNIDADE CENTRAL DE PROCESSAMENTO</span></div>
+          <svg class="wires" viewBox="0 0 760 560" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"/></marker></defs><g id="base-wires"></g><g id="active-wires"></g></svg>
+          <span class="area-caption control-caption">UNIDADE DE CONTROLE</span><span class="area-caption alu-caption">UNIDADE LÓGICA E ARITMÉTICA</span>
+          <button class="register reg-ci" data-node="CI"><span class="reg-top"><b>CI</b><small>PC</small></span><strong data-value="CI">00</strong><span class="reg-description">Contador de instrução</span></button>
+          <button class="register reg-ri wide-value" data-node="RI"><span class="reg-top"><b>RI</b><small>IR</small></span><strong data-value="RI">—</strong><span class="reg-description">Registrador de instrução</span></button>
+          <button class="register reg-di" data-node="DI"><span class="reg-top"><b>DI</b><small>DECODE</small></span><strong data-value="DI">—</strong><span class="reg-description">Decodificador</span></button>
+          <button class="register reg-uc" data-node="UC"><span class="reg-top"><b>UC</b><small>CONTROL</small></span><strong data-value="UC">espera</strong><span class="reg-description">Unidade de controle</span></button>
+          <button class="register reg-rem" data-node="REM"><span class="reg-top"><b>REM</b><small>MAR</small></span><strong data-value="REM">—</strong><span class="reg-description">Endereço da memória</span></button>
+          <button class="register reg-rdm wide-value" data-node="RDM"><span class="reg-top"><b>RDM</b><small>MDR</small></span><strong data-value="RDM">—</strong><span class="reg-description">Dados da memória</span></button>
+          <button class="register reg-op" data-node="ULA_OP"><span class="reg-top"><b>ULA_OP</b></span><strong data-value="ULA_OP">—</strong></button>
+          <button class="register reg-rula1" data-node="RULA_1"><span class="reg-top"><b>RULA₁</b><small>ENTRADA A</small></span><strong data-value="RULA_1">—</strong></button>
+          <button class="register reg-rula2" data-node="RULA_2"><span class="reg-top"><b>RULA₂</b><small>ENTRADA B</small></span><strong data-value="RULA_2">—</strong></button>
+          <button class="register reg-rula3" data-node="RULA_3"><span class="reg-top"><b>RULA₃</b><small>DESTINO</small></span><strong data-value="RULA_3">—</strong></button>
+          <button class="alu-node" data-node="ULA" aria-label="ULA, Unidade Lógica e Aritmética"><div class="alu-shape"></div><span class="alu-label">ULA</span><strong id="alu-symbol">+ / −</strong><span class="alu-output" data-value="ULA">—</span></button>
+          <button class="register reg-acc" data-node="ACC"><span class="reg-top"><b>ACC</b><small>ACUMULADOR</small></span><strong data-value="ACC">0</strong></button>
+          <button class="register reg-flags" data-node="FLAGS"><span class="reg-top"><b>FLAGS</b></span><span class="flag-values"><span>Z <b id="flag-z">0</b></span><span>N <b id="flag-n">0</b></span></span></button>
+          <button class="memory-port" data-node="MP"><span class="memory-stack" aria-hidden="true">▤</span><strong>MP</strong><small>Memória<br>principal</small><span id="memory-signal">pronta</span></button>
+          <span class="bus-label">BARRAMENTO INTERNO</span><span id="transfer-chip" class="transfer-chip">Cada passo revela uma transferência</span>
+        </div></div>
+        <div class="diagram-footer"><span><i class="pulse-dot"></i> <span id="diagram-hint">Clique em um bloco para conhecer sua função</span></span><span id="cycle-count">0 instruções concluídas</span></div>
+      </section>
+      <aside class="panel memory-panel">
+        <div class="panel-heading"><h2><span class="section-icon">▤</span> Memória principal</h2><span class="tiny-label">MP</span></div>
+        <div class="memory-controls"><div class="segmented" role="group" aria-label="Posições de memória exibidas"><button id="memory-used" class="selected" aria-pressed="true">Em uso</button><button id="memory-all" aria-pressed="false">Todas</button></div><button id="format" class="format-button" title="Alternar valores decimais e hexadecimais">DEC</button></div>
+        <div class="memory-table-wrap"><table class="memory-table"><thead><tr><th>Endereço</th><th>Conteúdo</th></tr></thead><tbody id="memory-body"></tbody></table></div>
+        <div class="memory-key"><span><i class="code-key"></i> instrução</span><span><i class="data-key"></i> dado</span><span><i class="changed-key"></i> alterado</span></div>
+        <p class="memory-help" id="memory-help">Clique em um dado para editar antes de executar.</p>
+        <div class="memory-edit" id="memory-edit" hidden><label for="memory-value" id="memory-edit-label">Valor em M13</label><form id="memory-form"><input id="memory-value" inputmode="numeric" type="number" min="-2147483648" max="2147483647" step="1" required><button class="button primary" type="submit">OK</button><button class="button quiet" id="memory-cancel" type="button" aria-label="Cancelar edição">×</button></form></div>
+        <div class="result-preview"><span class="eyebrow">NO ACUMULADOR</span><strong id="acc-result">0</strong><span id="result-caption">O resultado aparece aqui</span></div>
+      </aside>
+    </div>
+    <section class="detail-grid">
+      <div class="panel explanation-panel"><div class="explanation-top"><span class="eyebrow" id="step-kicker">PRONTO PARA EXPLORAR</span><span id="micro-count" class="step-counter">μ 000</span></div><h2 id="step-rtl">Uma instrução. Muitos movimentos.</h2><p id="step-explanation">Clique em “Próximo passo” para ver o CI enviar o endereço da primeira instrução à memória. Cada clique executa uma micro-operação.</p><div class="transfer-description" id="transfer-description"><span>ORIGEM</span><b>CI</b><i>→</i><span>DESTINO</span><b>REM</b></div></div>
+      <div class="panel trace-panel"><div class="panel-heading"><h2>Rastro de execução <span class="tiny-label">LTR</span></h2><button id="export-trace" class="text-button">Exportar rastro ↗</button></div><div id="trace" class="trace-list" role="log" aria-label="Histórico das micro-operações"><p class="trace-empty">As transferências entre registradores aparecerão aqui.<br><span>Use ← e → para navegar. Espaço para executar ou pausar.</span></p></div></div>
+    </section>
+    <footer class="page-footer"><span><b>CICLO CPU</b> · Feito para transformar arquitetura em movimento.</span><span>Modelo educacional · sem pipeline · execução sequencial</span></footer>
+  </main>
+  <dialog id="guide" aria-labelledby="guide-title"><div class="modal-heading"><div><p class="eyebrow">REFERÊNCIA RÁPIDA</p><h2 id="guide-title">Pequeno assembly. Grandes descobertas.</h2></div><button class="button icon-only" data-close="guide" aria-label="Fechar guia">×</button></div><div class="modal-body"><p>Este simulador usa uma <strong>arquitetura didática própria</strong>, inspirada na ideia de editor + CPU + memória do <a href="https://schweigi.github.io/assembler-simulator/" target="_blank" rel="noopener noreferrer">Assembler Simulator</a>. Não é um emulador x86, ARM nem compatível com o conjunto de instruções desse site.</p><div class="guide-callout"><code>ADD M13 M15 M21</code><p>Primeiro a origem 1, depois a origem 2 e por último o destino.<br><strong>MP[21] ← MP[13] + MP[15]</strong></p></div><table class="guide-table"><thead><tr><th>Instruções</th><th>Exemplo</th><th>Efeito</th></tr></thead><tbody>
+      <tr><td>ADD, SUB, MUL, DIV, MOD</td><td><code>SUB M13 #2 M21</code></td><td>Aritmética: origem 1, origem 2, destino.</td></tr>
+      <tr><td>Forma com acumulador</td><td><code>ADD #5</code></td><td>ACC ← ACC + 5. Válida para as operações binárias.</td></tr>
+      <tr><td>AND, OR, XOR, SHL, SHR</td><td><code>AND M13 #3 M21</code></td><td>Lógica e deslocamento de bits.</td></tr>
+      <tr><td>NOT</td><td><code>NOT M13 M21</code></td><td>Inverte os 32 bits da origem.</td></tr>
+      <tr><td>LOAD / STORE</td><td><code>LOAD M13</code><br><code>STORE M21</code></td><td>Carrega ACC / armazena ACC na memória.</td></tr>
+      <tr><td>MOV</td><td><code>MOV #8 M21</code></td><td>Copia origem para destino, passando por ACC.</td></tr>
+      <tr><td>INC / DEC</td><td><code>INC M21</code></td><td>Soma / subtrai 1 no próprio destino.</td></tr>
+      <tr><td>CMP</td><td><code>CMP M13 #0</code></td><td>Compara, atualiza Z/N e preserva ACC.</td></tr>
+      <tr><td>JMP</td><td><code>JMP inicio</code></td><td>Salto incondicional para rótulo ou endereço.</td></tr>
+      <tr><td>JZ / JE, JNZ / JNE</td><td><code>JNZ repetir</code></td><td>Salta se zero / igual; ou não zero / diferente.</td></tr>
+      <tr><td>JG, JL, JGE, JLE</td><td><code>JG repetir</code></td><td>Após CMP: maior, menor, maior/igual, menor/igual.</td></tr>
+      <tr><td>NOP / HLT</td><td><code>HLT</code></td><td>Nenhuma operação / encerra o programa.</td></tr>
+    </tbody></table><h3>Operandos, dados e rótulos</h3><p><code>M13</code> é um endereço; <code>#5</code> (ou <code>5</code>) é um imediato; <code>ACC</code> é o acumulador. Declare dados com <code>M13: 7</code> e rótulos com <code>inicio:</code>. Vírgulas são opcionais e <code>;</code> inicia comentários. O programa começa em M0.</p><h3>Convenções do modelo</h3><ul><li>64 posições compartilhadas entre instruções e dados. Cada instrução ocupa uma posição; portanto, CI avança 1.</li><li>Inteiros com sinal de 32 bits. DIV trunca em direção a zero; MOD usa o resto com o sinal do dividendo. Overflow e divisão por zero interrompem a simulação.</li><li>RULA₁ e RULA₂ são entradas. RULA₃ guarda o <strong>endereço de destino</strong>. ULA mostra a saída e ULA_OP seleciona a operação.</li><li>O primeiro operando de memória passa por RDM → ACC → RULA₁. Se a segunda origem for ACC, ela é preservada em RULA₂ antes dessa passagem.</li><li>Z indica resultado zero; N, resultado negativo. LOAD, STORE, MOV, saltos e NOP preservam essas flags. CMP atualiza as flags sem armazenar a subtração.</li><li>As linhas dos barramentos são trajetos conceituais, não um circuito elétrico real. Cada clique executa uma micro-operação, não necessariamente um pulso de clock de hardware.</li><li>Voltar restaura registradores, flags e memória. São mantidos os últimos 1.000 passos; a execução automática pausa após 2.000 passos seguidos.</li></ul><h3>Para usar em aula</h3><p>Use <strong>Modo aula</strong> para ampliar o diagrama. Teclas: <kbd>→</kbd> próximo passo, <kbd>←</kbd> voltar, <kbd>Espaço</kbd> executar/pausar. Clique em um bloco para ver sua função. A montagem reinicia a simulação com o código do editor.</p><p class="privacy-note">Funciona offline. Nenhum programa é enviado a um servidor. O navegador tenta guardar o último código localmente; use o botão de download para preservá-lo em arquivo.</p></div></dialog>
+  <dialog id="register-info" aria-labelledby="register-title"><div class="modal-heading"><div><p class="eyebrow">POR DENTRO DO BLOCO</p><h2 id="register-title"></h2></div><button class="button icon-only" data-close="register-info" aria-label="Fechar descrição">×</button></div><div class="modal-body"><p id="register-description"></p><div class="register-current"><span>CONTEÚDO ATUAL</span><code id="register-current"></code></div></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
